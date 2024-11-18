@@ -5,64 +5,74 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const parseStringify = (value: any) => JSON.parse(JSON.stringify(value));
+export const parseStringify = (value: any) => {
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (e) {
+    console.error("Error cloning object", e);
+    return null; // Return null or another default value if cloning fails
+  }
+};
 
-export const convertFileToUrl = (file: File) => URL.createObjectURL(file);
+export const convertFileToUrl = (file: File) => {
+  const objectURL = URL.createObjectURL(file);
+  return objectURL;
+};
 
-// FORMAT DATE TIME
-export const formatDateTime = (dateString: Date | string, timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone) => {
+export const formatDateTime = (
+  dateString: Date | string,
+  timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
+) => {
+  const dateObj = new Date(dateString);
+  if (isNaN(dateObj.getTime())) {
+    throw new Error("Invalid date string");
+  }
+
   const dateTimeOptions: Intl.DateTimeFormatOptions = {
-    // weekday: "short", // abbreviated weekday name (e.g., 'Mon')
-    month: "short", // abbreviated month name (e.g., 'Oct')
-    day: "numeric", // numeric day of the month (e.g., '25')
-    year: "numeric", // numeric year (e.g., '2023')
-    hour: "numeric", // numeric hour (e.g., '8')
-    minute: "numeric", // numeric minute (e.g., '30')
-    hour12: true, // use 12-hour clock (true) or 24-hour clock (false),
-    timeZone: timeZone, // use the provided timezone
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+    timeZone, // Shorthand property assignment
   };
 
-  const dateDayOptions: Intl.DateTimeFormatOptions = {
-    weekday: "short", // abbreviated weekday name (e.g., 'Mon')
-    year: "numeric", // numeric year (e.g., '2023')
-    month: "2-digit", // abbreviated month name (e.g., 'Oct')
-    day: "2-digit", // numeric day of the month (e.g., '25')
-    timeZone: timeZone, // use the provided timezone
-  };
-
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    month: "short", // abbreviated month name (e.g., 'Oct')
-    year: "numeric", // numeric year (e.g., '2023')
-    day: "numeric", // numeric day of the month (e.g., '25')
-    timeZone: timeZone, // use the provided timezone
-  };
-
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: "numeric", // numeric hour (e.g., '8')
-    minute: "numeric", // numeric minute (e.g., '30')
-    hour12: true, // use 12-hour clock (true) or 24-hour clock (false)
-    timeZone: timeZone, // use the provided timezone
-  };
-
-  const formattedDateTime: string = new Date(dateString).toLocaleString(
+  const formattedDateTime: string = dateObj.toLocaleString(
     "en-US",
     dateTimeOptions
   );
 
-  const formattedDateDay: string = new Date(dateString).toLocaleString(
+  const dateDayOptions: Intl.DateTimeFormatOptions = {
+    weekday: "short",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone, // Shorthand property assignment
+  };
+
+  const formattedDateDay: string = dateObj.toLocaleString(
     "en-US",
     dateDayOptions
   );
 
-  const formattedDate: string = new Date(dateString).toLocaleString(
-    "en-US",
-    dateOptions
-  );
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    month: "short",
+    year: "numeric",
+    day: "numeric",
+    timeZone, // Shorthand property assignment
+  };
 
-  const formattedTime: string = new Date(dateString).toLocaleString(
-    "en-US",
-    timeOptions
-  );
+  const formattedDate: string = dateObj.toLocaleString("en-US", dateOptions);
+
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+    timeZone, // Shorthand property assignment
+  };
+
+  const formattedTime: string = dateObj.toLocaleString("en-US", timeOptions);
 
   return {
     dateTime: formattedDateTime,
@@ -73,9 +83,9 @@ export const formatDateTime = (dateString: Date | string, timeZone: string = Int
 };
 
 export function encryptKey(passkey: string) {
-  return btoa(passkey);
+  return btoa(unescape(encodeURIComponent(passkey)));
 }
 
 export function decryptKey(passkey: string) {
-  return atob(passkey);
+  return decodeURIComponent(escape(atob(passkey)));
 }
